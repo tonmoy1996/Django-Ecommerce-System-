@@ -1,0 +1,43 @@
+{% extends 'store/main.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+
+{% for msg in messages %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong> {{msg}}</strong> 
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+{%endfor%}
+{% endif %}
+
+ <h3>Store</h3>
+ <br>
+<div class="row">
+  {% for item in form %}
+	<div class="col-lg-4">
+		<div class="box-element product">
+            <img class="thumbnail" src="{{ item.imageURL}}">
+            <div class="box-element product">
+                <h6><strong>{{item.name}}</strong></h6>
+                <hr>
+        
+                <button data-product={{item.id}} data-action="add" class="btn btn-outline-secondary add-btn update-cart ">Add to Cart</button>
+                <a class="btn btn-outline-success" href="#">View</a>
+                <h4 style="display: inline-block; float: right;"><strong>${{item.price | floatformat:2}}</strong></h4>
+        
+            </div>
+		</div>
+  </div>
+  
+  {% endfor %}
+	
+	</div>
+</div>
+
+{% endblock content %}
+
+

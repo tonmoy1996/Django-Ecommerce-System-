@@ -4,13 +4,50 @@ from .forms import ProductForm
 from django.contrib import messages
 from django.http import JsonResponse
 import datetime 
+from .forms import UserCreation
+from django.contrib.auth import login, logout,authenticate
 # from django.views.decorators.csrf import csrf_exempt
 import json
 # Create your views here.
 
+def registerPage(request):
+    form= UserCreation()
+    if request.method== "POST":
+        form= UserCreation(request.POST)
+        if form.is_valid():
+            form.save()
+            username= form.cleaned_data['username']
+            messages.success(request,"Account created successfully for "+ username)
+            return redirect("login")
+    context={"form": form}
+    return render(request, "user/register.html",context)
+
+def loginPage(request):
+
+    if request.method== "POST":
+        username= request.POST.get("username")
+        password= request.POST.get("password")
+        user= authenticate(request, username=username, password= password)
+        if user:
+            if user.is_active:
+                login(request,user)
+                return redirect("/")
+            else:
+                print("User is not active")
+        else:
+            messages.error(request, 'username or password is not correct!!')
+    context={}
+    return render(request, "user/login.html")
+
+def logoutPage(request):
+    logout(request)
+    return redirect("/login")
+
+
+
 def store(request):
     if request.user.is_authenticated:
-        customer= request.user.customer
+        customer= request.user
         order, created= Order.objects.get_or_create(customer=customer,complete=False)
         items= order.orderitem_set.all()
         cartItems= order.get_total_quantity
@@ -29,7 +66,7 @@ def store(request):
 
 def cart(request):
     if request.user.is_authenticated:
-        customer= request.user.customer
+        customer= request.user
         order, created= Order.objects.get_or_create(customer=customer,complete=False)
 
         items= order.orderitem_set.all()
@@ -50,7 +87,7 @@ def cart(request):
 def checkout(request):
 
     if request.user.is_authenticated:
-        customer= request.user.customer
+        customer= request.user
         order,created= Order.objects.get_or_create(customer=customer,complete=False)
 
         items= order.orderitem_set.all()
@@ -99,7 +136,7 @@ def updateItem(request):
     productId= data['productId']
     action=data['action']
     
-    customer =request.user.customer
+    customer =request.user
     product= Product.objects.get(id= productId)
     order,created= Order.objects.get_or_create(customer=customer, complete=False)
     orderItem, created= OrderItem.objects.get_or_create(order=order, product=product)
@@ -120,11 +157,9 @@ def ProcessOrder(request):
 
     transaction_id = datetime.datetime.now().timestamp()
     data= json.loads(request.body)
-
     if request.user.is_authenticated:
-        customer=request.user.customer
-        order,created= Order.objects.get_or_create(customer=customer, complete=False)
-
+        customer= request.user
+        order = Order.objects.get(customer=customer,complete=False)
         total=float(data['form']['total'])
         order.transaction_id = transaction_id
 
@@ -133,12 +168,12 @@ def ProcessOrder(request):
         order.save()
 
         ShippingAddress.objects.create(
-            customer=customer,
-            order= order,
+            customer = customer,
+            order = order,
             address= data['shipping']['address'],
             city= data['shipping']['city'],
             state= data['shipping']['state'],
-            zipcode= data['shipping']['zipcode'],
+            zipcode= data['shipping']['zipcode']
         )
         print("Transaction Completed")
 
@@ -147,3 +182,11 @@ def ProcessOrder(request):
 
 
     return JsonResponse("Payment complete", safe=False)
+
+
+def orderlist(request):
+    orders= Order.objects.all().order_by('-date_ordered')
+    context= {
+        "orders" : orders
+    }
+    return render(request, "order/orderlist.html", context)

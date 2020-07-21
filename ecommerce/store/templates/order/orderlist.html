@@ -1,0 +1,45 @@
+{% extends "store/Main.html" %}
+
+{% load static %} 
+{% block content %} 
+
+{% for order in orders %}
+<div>
+    {% if order.orderitem_set.all %}
+
+
+    <h5 class="lead text-secondary" >Order: {{order.id}}</h5>
+    <label class="lead text-primary">Customer: {{order.customer.username}}</label><br/>
+    <label class="text-primary">Ordered Items</label>
+    <table class="table mb-4">
+        <tr>
+    
+            <thead class="thead-light">
+              <th scope="col">Product</th>
+              <th scope="col">Price</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Total</th>
+              <th scope="col">Date</th>
+            </thead>
+        </tr>
+    
+      <tbody>
+        {% for item in order.orderitem_set.all %}
+        <tr>
+          <td>{{item.product.name}}</td>
+          <td>{{item.product.price}}</td>
+          <td>{{ item.quantity}}</td>
+          <td>{{ item.get_total}}</td>
+          <td>{{item.date_added}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <label class="lead">Total Taka: {{order.get_chart_total}}</label>
+    <hr>
+</div>
+    {% endif %}
+
+{% endfor %}
+
+{% endblock %}
